@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Start the initializing sequences.
+
+echo "FROM PUBLIC INSTALLER"
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root!"
+   exit 1
+fi
+
+OSNAME=`lsb_release -s -i`
+OSVERSION=`lsb_release -s -r`
+OSCODENAME=`lsb_release -s -c`
+SUPPORTEDVERSION="16.04 18.04"
+INSTALLPACKAGE="curl git wget  expect nano openssl  python-setuptools python-pip perl zip unzip net-tools bc fail2ban augeas-tools libaugeas0 augeas-lenses firewalld build-essential acl passwd unattended-upgrades postfix make jq "
+
+# Updating dependencies, in case of the script is run directly.
+
+function RandomString {
+    head /dev/urandom | tr -dc _A-Za-z0-9 | head -c55
+}
+
+# Real Install
+apt-get install $INSTALLPACKAGE -y
+
+
+echo $SSHPANEL_HOOKS
+echo $SSHPANEL_UPDATE
+echo $SERVER_PUB
+echo $SERVER_IP
+echo $SERVER_NAME
+
