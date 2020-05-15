@@ -59,6 +59,46 @@ function InstallSoftether() {
     docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp -e HPW=$SOFTETHER_HUB_PASSWORD -e SPW=$SOFTETHER_ADMIN_PASSWORD -e PSK=$SOFTETHER_PSK -v /usr/local/vpn_server.config:/usr/vpnserver/vpn_server.config --name=sshpanel-softether sshpanel/softether
 
     # generate server ca
+    docker exec sshpanel-softether vpncmd  /SERVER /PASSWORD:$SOFTETHER_ADMIN_PASSWORD /CSV /CMD: ServerCertGet server.crt
+
+    SERVER_CA = `docker exec sshpanel-softether cat server.crt`
+
+    echo "SERVER CA"
+    echo $SERVER_CA
+
+    #curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_HOOK -d '{"action": "server_ca", "data": "$SERVER_CA"}'
+}
+
+function Finalizing() {
+
+    # Send completed
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "COMPLETED", "percentage": "100", "state": "SETUP_COMPLETED"}'
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"online": true}'
+
+    clear
+
+    Banner
+    echo ""
+    echo "=========================================================="
+    echo "Softether installed! This is the softether credentials :"
+    echo ""
+    echo "HUB DETAILS :-"
+    echo "HUB NAME: $SOFTETHER_HUB"
+    echo "HUB PASSWORD: $SOFTETHER_HUB_PASSWORD"
+    echo ""
+    echo "ADMIN DETAILS :-"
+    echo "ADMIN PASSWORD: $SOFTETHER_ADMIN_PASSWORD"
+    echo ""
+    echo "PSK (Pre-Shared Key): $SOFTETHER_PSK"
+    echo ""
+    echo "-----"
+    echo "Powered by SSHPANEL"
+    echo "Website: https://sshpanel.io"
+    echo "Contact: contact@sshpanel.io"
+    echo "-----"
+    echo ""
+    echo "=========================================================="
+
 
 }
 
@@ -96,7 +136,5 @@ Initializing
 # Installing Softether
 InstallSoftether
 
-
-# Send completed
-curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "COMPLETED", "percentage": "100", "state": "SETUP_COMPLETED"}'
-curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"online": true}'
+# Finalizing
+Finalizing
