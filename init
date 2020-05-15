@@ -2,8 +2,6 @@
 
 # Start the initializing sequences.
 
-echo "FROM PUBLIC INSTALLER"
-
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root!"
    exit 1
@@ -13,21 +11,88 @@ OSNAME=`lsb_release -s -i`
 OSVERSION=`lsb_release -s -r`
 OSCODENAME=`lsb_release -s -c`
 SUPPORTEDVERSION="16.04 18.04"
-INSTALLPACKAGE="curl git wget  expect nano openssl  python-setuptools python-pip perl zip unzip net-tools bc fail2ban augeas-tools libaugeas0 augeas-lenses firewalld build-essential acl passwd unattended-upgrades postfix make jq "
+INSTALLPACKAGE="curl git wget  expect nano openssl  python-setuptools python-pip perl zip unzip net-tools bc fail2ban augeas-tools libaugeas0 augeas-lenses firewalld build-essential acl passwd unattended-upgrades postfix make jq  docker.io docker"
 
 # Updating dependencies, in case of the script is run directly.
+
+
+function Banner()
+{
+    echo " _____ _____ _____ _____ _____ _____ _____ _____ _____ "
+    echo "|   __|     |   __|_   _|   __|_   _|  |  |   __| __  |"
+    echo "|__   |  |  |   __| | | |   __| | | |     |   __|    -|"
+    echo "|_____|_____|__|    |_| |_____| |_| |__|__|_____|__|__|"
+    echo ""
+    echo "~Powered by softether.org"
+}
+
+function Initializing() {
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "INITIALIZING SOFTETHER INSTALLATION", "percentage": "50"}'
+
+    sleep 2
+}
+
+function InstallPackages() {
+
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "INSTALLING SOFTETHER PACKAGES", "percentage": "55"}'
+
+    # Real Install
+    apt-get install $INSTALLPACKAGE -y
+
+}
+
+function InstallSoftether() {
+
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "PULLING IMAGES", "percentage": "70"}'
+
+    docker pull sshpanel/softether
+
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "REMOVING EXISTING IMAGES", "percentage": "75"}'
+
+    docker stop sshpanel-softether
+    docker rm sshpanel-softether
+
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "INSTALLING...", "percentage": "80"}'
+
+    touch /usr/local/vpn_server.config
+
+    docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp -e HPW=$SOFTETHER_HUB_PASSWORD -e SPW=$SOFTETHER_ADMIN_PASSWORD -e PSK=$SOFTETHER_PSK -v /usr/local/vpn_server.config:/usr/vpnserver/vpn_server.config --name=sshpanel-softether sshpanel/softether
+
+    # generate server ca
+
+}
 
 function RandomString {
     head /dev/urandom | tr -dc _A-Za-z0-9 | head -c55
 }
 
-# Real Install
-apt-get install $INSTALLPACKAGE -y
+if [[ $EUID -ne 0 ]]; then
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "[ERROR] PLEASE RUN THE INSTALLER SCRIPT AS ROOT!", "percentage": "0"}'
+   exit 1
+fi
+
+if [[ $(uname -m) != "x86_64" ]]; then
+    message="This installer only support x86_64 architecture"
+    echo $message
+
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "[ERROR] PLEASE RUN ONLY ON 64 BIT ARCHITECTURE!", "percentage": "0"}'
+    exit 1
+fi
+
+grep -q $OSVERSION <<< $SUPPORTEDVERSION
+if [[ $? -ne 0 ]]; then
+    message="This installer does not support $OSNAME $OSVERSION"
+    echo $message
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "[ERROR] INSTALLER DOES NOT SUPPORT $OSNAME $OSVERSION!", "percentage": "0"}'
+fi
 
 
-echo $SSHPANEL_HOOKS
-echo $SSHPANEL_UPDATE
-echo $SERVER_PUB
-echo $SERVER_IP
-echo $SERVER_NAME
+# Displaying Banner
+Banner
 
+# Installing Softether
+InstallSoftether
+
+
+# Send completed
+curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "COMPLETED", "percentage": "100", "state": "SETUP_COMPLETED"}'
