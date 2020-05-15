@@ -62,7 +62,7 @@ function InstallSoftether() {
     # generate server ca
     docker exec sshpanel-softether vpncmd  /SERVER /PASSWORD:$SOFTETHER_ADMIN_PASSWORD /CSV /CMD: ServerCertGet server.crt
 
-    SERVER_CA = `docker exec sshpanel-softether cat server.crt`
+    SERVER_CA=`docker exec sshpanel-softether cat server.crt`
 
     echo "SERVER CA"
     echo $SERVER_CA
