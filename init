@@ -76,7 +76,7 @@ function InstallSoftether() {
 function Finalizing() {
 
     # Send completed
-    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "COMPLETED", "percentage": "100", "state": "SETUP_COMPLETED"}'
+    curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "COMPLETED", "percentage": "100", "state": "SETUP_COMPLETED", "completed": true}'
     curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"online": true}'
 
     clear
