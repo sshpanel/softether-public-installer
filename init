@@ -61,6 +61,7 @@ function InstallSoftether() {
 
     echo "RELOADING CONFIGS"
     sleep 10
+    docker wait sshpanel-softether
 
     DOCKER_INTERNAL_IP=`docker inspect -f '{{ .NetworkSettings.IPAddress }}' sshpanel-softether`
 
