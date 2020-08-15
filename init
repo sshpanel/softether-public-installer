@@ -67,10 +67,15 @@ function InstallSoftether() {
     DOCKER_INTERNAL_IP=`docker inspect -f '{{ .NetworkSettings.IPAddress }}' sshpanel-softether`
 
     curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "GENERATING CERTIFICATES", "percentage": "90"}'
-
-    docker exec sshpanel-softether vpncmd localhost:5555  /SERVER /PASSWORD:$SOFTETHER_ADMIN_PASSWORD /CSV /CMD: ServerCertGet server.crt
-
-    docker exec sshpanel-softether cat server.crt > server.crt
+    
+    touch server.crt
+    
+    while ! [ -s server.crt ]; do
+       echo " GENERATING SERVER KEYS... "
+       docker exec sshpanel-softether vpncmd localhost:5555  /SERVER /PASSWORD:$SOFTETHER_ADMIN_PASSWORD /CSV /CMD: ServerCertGet server.crt
+       docker exec sshpanel-softether cat server.crt > server.crt
+       sleep 1 # throttle the check
+   done
 
     curl -4  -X  POST $SSHPANEL_HOOKS -F "action=softether_register_server_certificate" -F "data[cert]=@server.crt"
 }
