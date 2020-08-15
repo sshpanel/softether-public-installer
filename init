@@ -68,7 +68,7 @@ function InstallSoftether() {
 
     curl -4 -H "Content-Type: application/json" -X  GET $SSHPANEL_UPDATE -d '{"status": "GENERATING CERTIFICATES", "percentage": "90"}'
 
-    docker exec sshpanel-softether vpncmd $DOCKER_INTERNAL_IP:5555  /SERVER /PASSWORD:$SOFTETHER_ADMIN_PASSWORD /CSV /CMD: ServerCertGet server.crt
+    docker exec sshpanel-softether vpncmd localhost:5555  /SERVER /PASSWORD:$SOFTETHER_ADMIN_PASSWORD /CSV /CMD: ServerCertGet server.crt
 
     docker exec sshpanel-softether cat server.crt > server.crt
 
